@@ -1,2 +1,0 @@
-# MacWindowMonitor
-Mac_Mac_WindowMonitor
