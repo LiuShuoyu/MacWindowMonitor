@@ -8,6 +8,27 @@ class AppEvent: Identifiable {
     let event: String
     let timestamp: Date
     let duration: TimeInterval?  // 如果是退出事件，记录运行时长
+    
+    // 添加日期格式化器
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = TimeZone.current
+        formatter.locale = Locale.current
+        return formatter
+    }()
+    
+    var formattedTimestamp: String {
+        return AppEvent.dateFormatter.string(from: timestamp)
+    }
+    
+    var formattedDuration: String? {
+        guard let duration = duration else { return nil }
+        let hours = Int(duration) / 3600
+        let minutes = Int(duration) / 60 % 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
 
     init(appName: String, bundleIdentifier: String, event: String, timestamp: Date, duration: TimeInterval? = nil) {
         self.appName = appName
@@ -25,6 +46,27 @@ class WindowEvent: Identifiable {
     let timestamp: Date
     let windowTitle: String
     let duration: TimeInterval?  // 如果是关闭事件，记录窗口打开时长
+    
+    // 添加日期格式化器
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = TimeZone.current
+        formatter.locale = Locale.current
+        return formatter
+    }()
+    
+    var formattedTimestamp: String {
+        return WindowEvent.dateFormatter.string(from: timestamp)
+    }
+    
+    var formattedDuration: String? {
+        guard let duration = duration else { return nil }
+        let hours = Int(duration) / 3600
+        let minutes = Int(duration) / 60 % 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
 
     init(appName: String, event: String, timestamp: Date, windowTitle: String, duration: TimeInterval? = nil) {
         self.appName = appName
