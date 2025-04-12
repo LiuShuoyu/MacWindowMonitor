@@ -18,8 +18,8 @@ Mac OS 窗口活动监控工具，用于记录和显示应用程序窗口的使�
     "timestamp": "2025-04-12T16:38:40.047000+00:00",
     "duration": 8.768,
     "data": {
-        "app": "备忘录",
-        "title": "备忘录",
+        "app": "Xcode",
+        "title": "xcode",
         "url": null
     }
 }
@@ -45,50 +45,5 @@ Mac OS 窗口活动监控工具，用于记录和显示应用程序窗口的使�
 - 显示精确的时间戳
 - 显示毫秒级的持续时间
 
-## 技术实现
 
-### 核心类
-1. `WindowActivity`: 活动记录数据结构
-   - 包含唯一ID、时间戳、持续时间和窗口信息
-   - 提供时间格式化方法
 
-2. `WindowMonitor`: 监控核心类
-   - 使用 NSWorkspace 通知系统监控窗口活动
-   - 维护窗口状态字典
-   - 处理活动记录和更新
-
-### 监控机制
-1. 通知监听
-   - 应用启动通知
-   - 应用退出通知
-   - 窗口激活通知
-   - 窗口失活通知
-
-2. 状态管理
-   - 使用字典跟踪窗口状态
-   - 记录窗口的开始时间
-   - 计算窗口的使用时长
-
-## 使用示例
-
-1. 启动监控
-```swift
-let monitor = WindowMonitor()
-```
-
-2. 查看活动记录
-```swift
-for activity in monitor.activities {
-    print("应用: \(activity.data.app)")
-    print("窗口: \(activity.data.title)")
-    print("开始时间: \(activity.formattedTimestamp)")
-    print("持续时间: \(activity.formattedDuration)")
-}
-```
-
-## 注意事项
-
-1. 需要 macOS 10.15 或更高版本
-2. 需要用户授权辅助功能权限
-3. 建议在后台运行以持续监控
-4. 数据存储在内存中，应用退出后数据会丢失
