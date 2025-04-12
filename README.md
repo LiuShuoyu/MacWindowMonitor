@@ -45,5 +45,9 @@ Mac OS 窗口活动监控工具，用于记录和显示应用程序窗口的使�
 - 显示精确的时间戳
 - 显示毫秒级的持续时间
 
+### 6.  项目演示：
+![目前demo截图](https://github.com/LiuShuoyu/MacWindowMonitor/blob/1.0.0/WindowMonitorDemo_XcodeProject/pic/demo.png?raw=true)
+
+
 
 
