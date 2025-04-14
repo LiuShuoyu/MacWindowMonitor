@@ -43,11 +43,23 @@ struct WindowActivity: Identifiable, Codable {
 
 class WindowMonitor: ObservableObject {
     @Published var activities: [WindowActivity] = []
+    @Published var bootTime: Date?
     private var windowStates: [String: (startTime: Date, appName: String, windowTitle: String)] = [:]
     private var currentId = 0
     
     init() {
         setupWindowMonitoring()
+        getBootTime()
+    }
+    
+    private func getBootTime() {
+        var bootTime = timeval()
+        var mib: [Int32] = [CTL_KERN, KERN_BOOTTIME]
+        var size = MemoryLayout<timeval>.stride
+        
+        if sysctl(&mib, 2, &bootTime, &size, nil, 0) == 0 {
+            self.bootTime = Date(timeIntervalSince1970: Double(bootTime.tv_sec) + Double(bootTime.tv_usec) / 1_000_000.0)
+        }
     }
     
     private func setupWindowMonitoring() {
