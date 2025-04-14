@@ -21,6 +21,10 @@ struct ContentView: View {
             List(windowMonitor.activities) { activity in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
+                        if activity.data.app == "System" {
+                            Image(systemName: activity.data.title == "屏幕锁定" ? "lock.fill" : "lock.open.fill")
+                                .foregroundColor(activity.data.title == "屏幕锁定" ? .red : .green)
+                        }
                         Text(activity.data.app)
                             .font(.headline)
                         Spacer()
@@ -32,7 +36,7 @@ struct ContentView: View {
                     Text(activity.data.title)
                         .font(.subheadline)
                     
-                    if activity.duration >= 0 {
+                    if activity.duration > 0 {
                         Text("持续时间: \(activity.formattedDuration)")
                             .font(.caption)
                             .foregroundColor(.secondary)

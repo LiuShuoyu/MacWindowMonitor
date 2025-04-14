@@ -1,5 +1,6 @@
 import Cocoa
 import ApplicationServices
+import IOKit
 
 struct WindowActivity: Identifiable, Codable {
     let id: Int
@@ -46,10 +47,12 @@ class WindowMonitor: ObservableObject {
     @Published var bootTime: Date?
     private var windowStates: [String: (startTime: Date, appName: String, windowTitle: String)] = [:]
     private var currentId = 0
+    private var screenLocked = false
     
     init() {
         setupWindowMonitoring()
         getBootTime()
+        setupScreenLockMonitoring()
     }
     
     private func getBootTime() {
@@ -164,6 +167,66 @@ class WindowMonitor: ObservableObject {
             data: WindowActivity.WindowData(
                 app: windowState.appName,
                 title: windowState.windowTitle,
+                url: nil
+            )
+        )
+        
+        DispatchQueue.main.async {
+            self.activities.insert(activity, at: 0)
+        }
+        currentId += 1
+    }
+    
+    private func setupScreenLockMonitoring() {
+        let notificationCenter = NSWorkspace.shared.notificationCenter
+        
+        // 监听屏幕锁定
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(screenLocked(_:)),
+            name: NSWorkspace.screensDidSleepNotification,
+            object: nil
+        )
+        
+        // 监听屏幕解锁
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(screenUnlocked(_:)),
+            name: NSWorkspace.screensDidWakeNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func screenLocked(_ notification: Notification) {
+        screenLocked = true
+        let now = Date()
+        let activity = WindowActivity(
+            id: currentId,
+            timestamp: WindowActivity.dateFormatter.string(from: now),
+            duration: 0,
+            data: WindowActivity.WindowData(
+                app: "System",
+                title: "屏幕锁定",
+                url: nil
+            )
+        )
+        
+        DispatchQueue.main.async {
+            self.activities.insert(activity, at: 0)
+        }
+        currentId += 1
+    }
+    
+    @objc private func screenUnlocked(_ notification: Notification) {
+        screenLocked = false
+        let now = Date()
+        let activity = WindowActivity(
+            id: currentId,
+            timestamp: WindowActivity.dateFormatter.string(from: now),
+            duration: 0,
+            data: WindowActivity.WindowData(
+                app: "System",
+                title: "屏幕解锁",
                 url: nil
             )
         )
