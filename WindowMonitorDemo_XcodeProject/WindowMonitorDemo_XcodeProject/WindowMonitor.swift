@@ -42,17 +42,27 @@ struct WindowActivity: Identifiable, Codable {
     }
 }
 
+struct AppDuration: Identifiable {
+    let id: String
+    let appName: String
+    var launchTime: Date?
+    var isRunning: Bool
+}
+
 class WindowMonitor: ObservableObject {
     @Published var activities: [WindowActivity] = []
     @Published var bootTime: Date?
+    @Published var appDurations: [AppDuration] = []
     private var windowStates: [String: (startTime: Date, appName: String, windowTitle: String)] = [:]
     private var currentId = 0
     private var screenLocked = false
+    private var timer: Timer?
     
     init() {
         setupWindowMonitoring()
         getBootTime()
         setupScreenLockMonitoring()
+        startDurationTracking()
     }
     
     private func getBootTime() {
@@ -159,6 +169,64 @@ class WindowMonitor: ObservableObject {
         }
     }
     
+    private func startDurationTracking() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateRunningApps()
+        }
+    }
+    
+    private func updateRunningApps() {
+        let runningApps = NSWorkspace.shared.runningApplications
+        let now = Date()
+        
+        // 更新现有应用的运行状态
+        for (index, appDuration) in appDurations.enumerated() {
+            if let runningApp = runningApps.first(where: { $0.localizedName == appDuration.appName }) {
+                if !appDuration.isRunning {
+                    // 应用开始运行
+                    appDurations[index].isRunning = true
+                    appDurations[index].launchTime = now
+                }
+            } else if appDuration.isRunning {
+                // 应用已停止运行
+                appDurations[index].isRunning = false
+                appDurations[index].launchTime = nil
+            }
+        }
+        
+        // 添加新运行的应用
+        for app in runningApps {
+            if let appName = app.localizedName,
+               !appDurations.contains(where: { $0.appName == appName }) {
+                let newAppDuration = AppDuration(
+                    id: UUID().uuidString,
+                    appName: appName,
+                    launchTime: now,
+                    isRunning: true
+                )
+                appDurations.append(newAppDuration)
+            }
+        }
+        
+        // 按启动时间排序（最近启动的在前）
+        appDurations.sort { ($0.launchTime ?? Date.distantPast) > ($1.launchTime ?? Date.distantPast) }
+    }
+    
+    private func updateAppDuration(appName: String, duration: TimeInterval) {
+        if let index = appDurations.firstIndex(where: { $0.appName == appName }) {
+            appDurations[index].isRunning = false
+            appDurations[index].launchTime = nil
+        } else {
+            let newAppDuration = AppDuration(
+                id: UUID().uuidString,
+                appName: appName,
+                launchTime: nil,
+                isRunning: false
+            )
+            appDurations.append(newAppDuration)
+        }
+    }
+    
     private func recordActivity(windowState: (startTime: Date, appName: String, windowTitle: String), duration: TimeInterval) {
         let activity = WindowActivity(
             id: currentId,
@@ -173,6 +241,9 @@ class WindowMonitor: ObservableObject {
         
         DispatchQueue.main.async {
             self.activities.insert(activity, at: 0)
+            if windowState.appName != "System" {
+                self.updateAppDuration(appName: windowState.appName, duration: duration)
+            }
         }
         currentId += 1
     }
